@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const logsService = require('./services/logs.service');
 const logsRoutes = require('./routes/logs.routes'); // Importa la ruta de logs
 const WebSocket = require('ws');
+require('dotenv').config();
 
 const app = express();
 const port = 3000;
@@ -12,7 +13,7 @@ const port = 3000;
 app.use(express.json());
 
 // Conexion a la base de datos de MongoDB en Atlas
-const uri = 'mongodb+srv://bapsinfosa:JJGGm6bADqFnOwoS@cluster0.fobdi.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+const uri = process.env.MONGODB_URI;
 mongoose.connect(uri, {dbName: 'beluar'})
   .then(() => {
     console.log('Conexión a la base de datos exitosa');
