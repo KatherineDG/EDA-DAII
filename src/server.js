@@ -26,16 +26,37 @@ mongoose.connect(uri, {dbName: 'beluar'})
 
 app.use('/api', logsRoutes);
 
+
+// ------ WebSocket Servidor para clientes React ------
+const wsServer = new WebSocket.Server({ port: 3031 }); // Cambié el puerto para evitar conflictos
+
+let clients = [];
+
+wsServer.on('connection', (client) => {
+  clients.push(client);
+  console.log('Cliente conectado desde React');
+  console.log(clients)
+
+  client.on('message', (message) => {
+    console.log('Mensaje recibido del cliente React:', message);
+  });
+
+  client.on('close', () => {
+    clients = clients.filter(c => c !== client);
+    console.log('Cliente desconectado');
+  });
+});
+
+
 // Conexion al websocket
 // URL del WebSocket en API Gateway
 const websocketUrl = 'wss://25zb4cxwg1.execute-api.us-east-1.amazonaws.com/dev/';
-
 // Crear el cliente WebSocket y conectarse al WebSocket URL
 const ws = new WebSocket(websocketUrl);
 
 // Evento que se dispara cuando se establece la conexión con el WebSocket
 ws.on('open', function open() {
-  console.log('Conexión establecida con el monitoreo en tiempo real');
+  console.log(`Conexión establecida con el monitoreo en tiempo real.`);
   ws.send(JSON.stringify({ message: 'Conexión establecida con el monitoreo en tiempo real' }));
 });
 
@@ -50,22 +71,37 @@ ws.on('message', async function incoming(message) {
 
       if (jsonMessage.message === 'Forbidden') {
         console.log('Evento omitido:', jsonMessage);
-        return; // Salir de la función para no guardar el log
+        //return; // Salir de la función para no guardar el log
       }
-       // Crear un log con el mensaje recibido
-      const logData = {
-            topico: jsonMessage.topico,
-            event_name: jsonMessage.event_name,
-            body: jsonMessage.body,
-            connection_id: jsonMessage.connection_id, // Añadir connection_id
-            status: jsonMessage.status, // O "error" según la lógica que necesites
-            timestamp: new Date().toISOString(), // Añadir timestamp
+      else if (jsonMessage.message === 'actualizacion') {
+        console.log('ENTROOOO')
+        // Crear un log con el mensaje recibido
+        const logData = {
+          topico: jsonMessage.topico,
+          event_name: jsonMessage.event_name,
+          body: jsonMessage.body,
+          connection_id: jsonMessage.connection_id, // Añadir connection_id
+          status: jsonMessage.status, // O "error" según la lógica que necesites
+          timestamp: new Date().toISOString(), // Añadir timestamp
         };
 
-      // Guardar el log en la base de datos
-      await logsService.createLog(logData);
-      console.log('Log creado exitosamente:', logData);
+        // Guardar el log en la base de datos
+        await logsService.createLog(logData);
+        console.log('Log creado exitosamente:', logData);
 
+        console.log(clients)
+          // Enviar mensaje de actualización a todos los clientes React conectados
+        clients.forEach(client => {
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify({
+              message: 'actualizacion',
+              data: logData, // Aquí puedes enviar la data que necesites
+            }));
+          }
+        });
+      }
+
+      
 
     } catch (err) {
       console.log('Mensaje recibido no es un JSON válido:', parsedMessage);

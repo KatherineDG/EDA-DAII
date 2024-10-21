@@ -56,9 +56,6 @@ const getLogsToEventNameToTopic = async (req, res) => {
   
     try {
       const logs = await logsService.getLogsToEventNameToTopic(event_name, topico);
-      if (logs.length === 0) {
-        return res.status(404).send(`No se encontraron logs para el evento: ${event_name} en el tópico: ${topico}`);
-      }
       res.status(200).json(logs);
     } catch (error) {
       console.error(`Error al obtener logs para el evento ${event_name} en el tópico ${topico}:`, error);
