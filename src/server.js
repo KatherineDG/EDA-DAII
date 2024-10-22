@@ -6,6 +6,7 @@ const logsRoutes = require('./routes/logs.routes'); // Importa la ruta de logs
 const WebSocket = require('ws');
 require('dotenv').config();
 const cors = require('cors');
+const http = require('http'); // Necesario para combinar HTTP y WebSockets
 
 const app = express();
 const port = 3030;
@@ -26,9 +27,11 @@ mongoose.connect(uri, {dbName: 'beluar'})
 
 app.use('/api', logsRoutes);
 
+// Crear un servidor HTTP con la aplicación Express
+const server = http.createServer(app);
 
 // ------ WebSocket Servidor para clientes React ------
-const wsServer = new WebSocket.Server({ port: 3031 }); // Cambié el puerto para evitar conflictos
+const wsServer = new WebSocket.Server({server}); // Cambié el puerto para evitar conflictos
 
 let clients = [];
 
