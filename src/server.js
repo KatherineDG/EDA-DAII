@@ -7,9 +7,11 @@ const WebSocket = require('ws');
 require('dotenv').config();
 const cors = require('cors');
 const http = require('http'); // Necesario para combinar HTTP y WebSockets
+const { createConnectionIdServer } = require('./services/connectionId.service');
+const connectionIdRoutes = require('./routes/connectionId.routes'); // Importa la ruta de logs
 
 const app = express();
-const port = 3030;
+const port = 5000;
 
 // Midleware para parsear el body de las peticiones
 app.use(express.json());
@@ -30,29 +32,30 @@ mongoose.connect(uri, {dbName: 'beluar'})
   });
 
 app.use('/api', logsRoutes);
+app.use('/api', connectionIdRoutes);
 
 // Crear un servidor HTTP con la aplicación Express
-const server = http.createServer(app);
+// const server = http.createServer(app);
 
-// ------ WebSocket Servidor para clientes React ------
-const wsServer = new WebSocket.Server({server}); // Cambié el puerto para evitar conflictos
+// // ------ WebSocket Servidor para clientes React ------
+// const wsServer = new WebSocket.Server({port: 3031}); // Cambié el puerto para evitar conflictos
 
-let clients = [];
+// let clients = [];
 
-wsServer.on('connection', (client) => {
-  clients.push(client);
-  console.log('Cliente conectado desde React');
-  console.log(clients)
+// wsServer.on('connection', (client) => {
+//   clients.push(client);
+//   console.log('Cliente conectado desde React');
+//   console.log(clients)
 
-  client.on('message', (message) => {
-    console.log('Mensaje recibido del cliente React:', message);
-  });
+//   client.on('message', (message) => {
+//     console.log('Mensaje recibido del cliente React:', message);
+//   });
 
-  client.on('close', () => {
-    clients = clients.filter(c => c !== client);
-    console.log('Cliente desconectado');
-  });
-});
+//   client.on('close', () => {
+//     clients = clients.filter(c => c !== client);
+//     console.log('Cliente desconectado');
+//   });
+// });
 
 
 // Conexion al websocket
@@ -83,7 +86,19 @@ ws.on('message', async function incoming(message) {
 
       if (jsonMessage.message === 'Forbidden') {
         console.log('Evento omitido:', jsonMessage);
-        //return; // Salir de la función para no guardar el log
+        
+        if (jsonMessage.connectionId) {
+          try {
+              const connectionIdData = {
+              connection_id: jsonMessage.connectionId
+            }
+
+            await createConnectionIdServer(connectionIdData);
+            console.log('Conexion almacenada')
+          } catch (error) {
+            console.error('error al almacenar el conection id: ', error)
+          }
+        }
       }
       else if (jsonMessage.message === 'actualizacion') {
         console.log('ENTROOOO')
