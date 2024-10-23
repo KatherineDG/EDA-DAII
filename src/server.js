@@ -61,6 +61,11 @@ const ws = new WebSocket(websocketUrl);
 ws.on('open', function open() {
   console.log(`Conexión establecida con el monitoreo en tiempo real.`);
   ws.send(JSON.stringify({ message: 'Conexión establecida con el monitoreo en tiempo real' }));
+  // Enviar un ping cada 5 minutos (300000 ms)
+  setInterval(() => {
+    console.log('Enviando ping al API Gateway');
+    ws.send(JSON.stringify({ type: 'ping' })); // Enviar un mensaje de ping
+  }, 300000);
 });
 
 // Evento que se dispara cuando se recibe un mensaje del WebSocket
