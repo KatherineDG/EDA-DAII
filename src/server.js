@@ -21,7 +21,7 @@ const corsOptions = {
 
 // Midleware para parsear el body de las peticiones
 app.use(express.json());
-app.use(cors(corsOptions));
+app.use(cors());
 
 // Conexion a la base de datos de MongoDB en Atlas
 const uri = process.env.MONGODB_URI;
