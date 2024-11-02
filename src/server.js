@@ -13,9 +13,15 @@ const connectionIdRoutes = require('./routes/connectionId.routes'); // Importa l
 const app = express();
 const port = 5000;
 
+const corsOptions = {
+  origin: 'http://ec2-3-89-66-61.compute-1.amazonaws.com:3000', // Reemplaza con la URL de tu aplicación React
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Métodos permitidos
+  allowedHeaders: ['Content-Type', 'Authorization'], // Encabezados permitidos
+};
+
 // Midleware para parsear el body de las peticiones
 app.use(express.json());
-app.use(cors());
+app.use(cors(corsOptions));
 
 // Conexion a la base de datos de MongoDB en Atlas
 const uri = process.env.MONGODB_URI;
