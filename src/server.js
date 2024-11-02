@@ -60,15 +60,30 @@ const websocketUrl = 'wss://25zb4cxwg1.execute-api.us-east-1.amazonaws.com/dev/'
 // Crear el cliente WebSocket y conectarse al WebSocket URL
 const ws = new WebSocket(websocketUrl);
 
+// Función de heartbeat
+function iniciarPingPong() {
+  setInterval(() => {
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ action: 'heartbeat' })); // Enviar un mensaje de ping
+      console.log('Ping enviado al servidor');
+    }
+  }, 300000); // Enviar cada 5 minutos (300,000 ms)
+}
+
+// Función de reconexión automática
+function reconectar() {
+  setTimeout(() => {
+    console.log('Reconectando...');
+    ws = new WebSocket('wss://25zb4cxwg1.execute-api.us-east-1.amazonaws.com/dev/');
+  }, 5000); // Intentar reconectar después de 5 segundos
+}
+
 // Evento que se dispara cuando se establece la conexión con el WebSocket
 ws.on('open', function open() {
   console.log(`Conexión establecida con el monitoreo en tiempo real.`);
   ws.send(JSON.stringify({ message: 'Conexión establecida con el monitoreo en tiempo real' }));
   // Enviar un ping cada 5 minutos (300000 ms)
-  setInterval(() => {
-    console.log('Enviando ping al API Gateway');
-    ws.send(JSON.stringify({ type: 'ping' })); // Enviar un mensaje de ping
-  }, 300000);
+  iniciarPingPong();
 });
 
 // Evento que se dispara cuando se recibe un mensaje del WebSocket
